@@ -1,0 +1,118 @@
+---
+title: Middleware
+description: Extend Mach with global and route-specific middleware
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+## Middleware Concept
+
+Middleware in Mach allows you to intercept requests before they reach your route handler. It follows the standard Go `func(http.Handler) http.Handler` pattern, making it seamlessly compatible with the vast ecosystem of existing Go middleware libraries.
+
+Middleware is executed in the order it is added ("onion" model).
+
+## Global Middleware
+
+To add middleware that runs for **every** request hitting your application, use `app.Use()`.
+
+```go
+app := mach.New()
+
+app.Use(mach.Logger())
+app.Use(mach.Recovery())
+app.Use(mach.CORS([]string{"*"}))
+```
+
+## Group Middleware
+
+You can apply middleware to specific groups of routes. This is perfect for authentication or area-specific logic.
+
+```go
+api := app.Group("/api")
+// Only /api/* routes will run this middleware
+api.Use(authMiddleware)
+
+// or apply inline when creating a group:
+admin := app.Group("/admin", adminAuthMiddleware, auditLogMiddleware)
+```
+
+## Built-in Middleware
+
+Mach comes with essential middleware out of the box to get you started quickly.
+
+### Logger
+
+Logs incoming requests with their method, path, status code, duration, and response size.
+
+```go
+app.Use(mach.Logger())
+```
+
+Example output:
+```text
+[GET] /users 127.0.0.1:54321 - 200 (150µs) 450 bytes
+```
+
+### Recovery
+
+Catches any panics that occur during request handling, logs the stack trace, and sends a 500 Internal Server Error to the client. This ensures your server stays running even if a handler crashes.
+
+```go
+app.Use(mach.Recovery())
+```
+
+<Callout type="warn">
+    It is highly recommended to include `Recovery` middleware in production.
+</Callout>
+
+### CORS (Cross-Origin Resource Sharing)
+
+Handles CORS preflight requests and headers transparently.
+
+```go
+// Allow specific origins
+app.Use(mach.CORS([]string{"https://example.com", "https://app.example.com"}))
+
+// Allow all origins (use with caution in production)
+app.Use(mach.CORS([]string{"*"}))
+```
+
+## Custom Middleware
+
+Writing custom middleware is simple. It just needs to return a function that wraps an `http.Handler`.
+
+`mach.MiddlewareFunc` is an alias for `func(http.Handler) http.Handler`.
+
+### Example: Simple Auth Middleware
+
+```go
+func AuthRequired() mach.MiddlewareFunc {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            token := r.Header.Get("Authorization")
+            
+            // Validate token
+            if token != "secret-token" {
+                http.Error(w, "Unauthorized", http.StatusUnauthorized)
+                return // Stop the chain, do not call next
+            }
+
+            // Continue to the next handler
+            next.ServeHTTP(w, r)
+        })
+    }
+}
+```
+
+### Example: Response Header Middleware
+
+```go
+func PoweredBy() mach.MiddlewareFunc {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            w.Header().Set("X-Powered-By", "Mach Framework")
+            next.ServeHTTP(w, r)
+        })
+    }
+}
+```

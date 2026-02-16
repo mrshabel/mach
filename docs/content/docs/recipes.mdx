@@ -1,0 +1,84 @@
+---
+title: Recipes
+description: Common patterns and examples for building Mach applications
+---
+
+## Custom 404 Handler
+
+Since Mach uses `http.ServeMux` internally, 404s are handled by default. However, you can create a custom catch-all route if you need specific 404 logic (like returning a JSON error instead of text).
+
+To handle 404s within a group (e.g., API), use a wildcard at the end of your group definitions.
+
+```go
+app.GET("/{path...}", func(c *mach.Context) {
+    c.JSON(404, map[string]string{
+        "error": "resource not found",
+    })
+})
+```
+
+## Graceful Shutdown
+
+Mach supports graceful shutdown configuration, allowing ongoing requests to complete before the server stops.
+
+```go
+// 10 seconds timeout for graceful shutdown
+app.Run(":8080", mach.WithGracefulShutdown(10*time.Second))
+```
+
+## Server Timeouts
+
+Protect your server from slow clients by configuring read and write timeouts.
+
+```go
+app.Run(":8080",
+    mach.WithReadTimeout(5*time.Second),
+    mach.WithWriteTimeout(10*time.Second),
+)
+```
+
+## Serving Single Page Applications (SPA)
+
+To serve an SPA (like React, Vue, Svelte) where all non-file routes should redirect to `index.html`:
+
+```go
+// Serve static assets from build directory
+app.Static("/assets/", "./dist/assets")
+
+// Catch-all route to serve index.html for client-side routing
+app.GET("/{path...}", func(c *mach.Context) {
+    http.ServeFile(c.Response, c.Request, "./dist/index.html")
+})
+```
+
+## Structuring Large Projects
+
+For larger applications, separation of concerns is key.
+
+```text
+cmd/
+  api/
+    main.go
+internal/
+  handlers/
+    user.go
+    auth.go
+  middleware/
+    auth.go
+  models/
+    user.go
+```
+
+In `main.go`:
+
+```go
+func main() {
+    app := mach.Default()
+
+    // Register routes using handlers from internal packages
+    handlers.RegisterUserRoutes(app.Group("/users"))
+    handlers.RegisterAuthRoutes(app.Group("/auth"))
+
+    app.Run(":8080")
+}
+```

@@ -1,0 +1,175 @@
+---
+title: Context API
+description: Working with the Context object for request and response handling
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+## Overview
+
+The `Context` object is the core of request handling in Mach. It wraps the standard `http.ResponseWriter` and `*http.Request` to provide helper methods for reading request data and writing responses.
+
+`Context` objects are **pooled** using `sync.Pool`. This means they are reused across requests to drastically reduce memory allocations and garbage collection overhead in high-throughput applications.
+
+## Request Data
+
+### Retrieving Methods and Paths
+
+```go
+method := c.Method() // e.g., "GET", "POST"
+path := c.Path()     // e.g., "/users"
+```
+
+### Path Parameters
+
+Get values from the URL path defined with `{param}` syntax.
+
+```go
+id := c.Param("id")
+```
+
+### Query Parameters
+
+Get values from the URL query string (e.g., `?search=foo&page=2`).
+
+```go
+// Get a single value
+q := c.Query("search")
+
+// Get with a default value if missing
+page := c.DefaultQuery("page", "1")
+```
+
+### Form Data
+
+Retrieve values from POST forms (`application/x-www-form-urlencoded` or `multipart/form-data`).
+
+```go
+username := c.Form("username")
+password := c.Form("password")
+```
+
+### File Uploads
+
+Handle multipart file uploads easily.
+
+```go
+fileHeader, err := c.File("avatar")
+if err != nil {
+    // Handle error (no file uploaded, etc.)
+    c.Text(400, "File required")
+    return
+}
+// Use standard library methods to open/save the file
+// e.g., file, _ := fileHeader.Open()
+```
+
+### Headers and Cookies
+
+```go
+// Get a header
+userAgent := c.GetHeader("User-Agent")
+
+// Get a cookie
+cookie, err := c.Cookie("session_id")
+```
+
+### Client IP
+
+Retrieve the client's IP address, respecting `X-Forwarded-For` and `X-Real-IP` headers if behind a proxy.
+
+```go
+ip := c.ClientIP()
+```
+
+### Request Body Binding
+
+Mach provides helpers to decode JSON and XML request bodies directly into Go structs.
+
+```go
+type User struct {
+    Name  string `json:"name"`
+    Email string `json:"email"`
+}
+
+app.POST("/users", func(c *mach.Context) {
+    var user User
+    
+    // Decode JSON body
+    if err := c.DecodeJSON(&user); err != nil {
+        c.Text(400, "Invalid JSON")
+        return
+    }
+
+    c.JSON(201, user)
+})
+```
+
+Supported binding methods:
+- `DecodeJSON(interface{})`: Decodes JSON body.
+- `DecodeXML(interface{})`: Decodes XML body.
+- `Body()`: Reads the raw body bytes.
+
+## Responses
+
+Mach provides several semantic methods to send responses easily.
+
+### JSON response
+
+Sets `Content-Type: application/json` and encodes the data.
+
+```go
+c.JSON(200, map[string]string{"status": "ok"})
+```
+
+### Text response
+
+Sets `Content-Type: text/plain`.
+
+```go
+c.Text(200, "Hello %s", "World")
+```
+
+### HTML response
+
+Sets `Content-Type: text/html`.
+
+```go
+c.HTML(200, "<h1>Hello</h1>")
+```
+
+### XML response
+
+Sets `Content-Type: application/xml`.
+
+```go
+c.XML(200, &data)
+```
+
+### Raw Data
+
+Send raw bytes with a custom content type.
+
+```go
+c.Data(200, "application/octet-stream", []byte("binary data"))
+```
+
+### Redirects
+
+Redirect the client to a new URL.
+
+```go
+c.Redirect(302, "/login")
+```
+
+### Setting Headers and Cookies
+
+```go
+c.SetHeader("X-Custom-Header", "value")
+
+c.SetCookie(&http.Cookie{
+    Name:  "token",
+    Value: "12345",
+    Path:  "/",
+})
+```

@@ -1,0 +1,15 @@
+# go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+
+# docs
+docs/node_modules/
+docs/.next/
+docs/out/
+docs/.vercel/

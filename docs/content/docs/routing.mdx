@@ -1,0 +1,108 @@
+---
+title: Routing
+description: Learn how to define routes, groups, and handle parameters
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+## HTTP Methods
+
+Mach provides helper methods for all standard HTTP verbs. This makes route definition declarative and easy to read. Since Mach builds on top of `net/http`, these are fully compatible with standard handlers.
+
+```go
+app := mach.Default()
+
+// Basic routes
+app.GET("/users", listUsers)
+app.POST("/users", createUser)
+app.PUT("/users/{id}", updateUser)
+app.PATCH("/users/{id}", patchUser)
+app.DELETE("/users/{id}", deleteUser)
+
+// Other methods
+app.HEAD("/status", checkStatus)
+app.OPTIONS("/api", showOptions)
+```
+
+## Path Parameters
+
+Mach utilizes the robust pattern matching from Go 1.22's `net/http`. Parameters are defined using `{name}` syntax in the path.
+
+### Capturing Values
+
+To retrieve a parameter value, use `c.Param("name")`.
+
+```go
+// Route: /users/{id}
+app.GET("/users/{id}", func(c *mach.Context) {
+    id := c.Param("id")
+    c.Text(200, "User ID: %s", id)
+})
+```
+
+### Multiple Parameters
+
+You can define multiple parameters in a single route.
+
+```go
+// Route: /posts/{category}/{id}
+app.GET("/posts/{category}/{id}", func(c *mach.Context) {
+    category := c.Param("category")
+    id := c.Param("id")
+    
+    c.JSON(200, map[string]string{
+        "category": category,
+        "id":       id,
+    })
+})
+```
+
+### Wildcards
+
+Use `{name...}` to match the remaining path segments. This is useful for file servers or catch-all routes.
+
+```go
+// Matches /files/images/logo.png
+app.GET("/files/{path...}", func(c *mach.Context) {
+    path := c.Param("path")
+    c.Text(200, "Requested file: %s", path)
+})
+```
+
+## Route Groups
+
+Grouping routes allows you to organize your application structure and share common middleware (like authentication or logging) across a set of routes.
+
+```go
+// Create a group for API v1
+v1 := app.Group("/api/v1")
+
+// Apply middleware specific to this group
+v1.Use(authMiddleware)
+
+// Define routes under /api/v1
+{
+    v1.GET("/users", listUsers) // GET /api/v1/users
+    v1.POST("/users", createUser) // POST /api/v1/users
+}
+
+// Create a nested group for admin
+admin := v1.Group("/admin")
+{
+    admin.DELETE("/users/{id}", deleteUser) // DELETE /api/v1/admin/users/{id}
+}
+```
+
+## Static Files
+
+Serve static files from a directory using `app.Static`. This automatically sets up a file server for the specified directory.
+
+```go
+// Serve files from the "./public" directory at the "/static" path
+// e.g. /static/css/style.css -> ./public/css/style.css
+app.Static("/static/", "./public")
+```
+
+<Callout type="warn">
+    Ensure the path prefix ends with a slash `/` (e.g., `/static/`) for proper routing behavior.
+</Callout>

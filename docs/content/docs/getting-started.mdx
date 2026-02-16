@@ -1,0 +1,112 @@
+---
+title: Getting Started
+description: Install Mach and create your first web application
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+## Prerequisites
+
+- **Go 1.22 or higher**: Mach leverages Go 1.22's enhanced routing features.
+- Basic understanding of Go and HTTP concepts.
+- A Go development environment set up.
+
+<Callout type="warn">
+    Mach requires **Go 1.22+** for the enhanced `net/http.ServeMux` pattern matching features. Please ensure your Go version is up to date (`go version`).
+</Callout>
+
+## Installation
+
+Install Mach using `go get`:
+
+```bash
+go get github.com/mrshabel/mach
+```
+
+This will download Mach and add it to your `go.mod` file. Since Mach has zero dependencies, the installation is instant.
+
+## Your First Application
+
+### 1. Create a Project
+
+```bash
+mkdir myapp
+cd myapp
+go mod init myapp
+go get github.com/mrshabel/mach
+```
+
+### 2. Write the Code
+
+Create a file named `main.go`:
+
+```go
+package main
+
+import (
+    "github.com/mrshabel/mach"
+)
+
+func main() {
+    // Initialize a new Mach application
+    app := mach.New()
+
+    // Add global middleware (optional but recommended)
+    app.Use(mach.Logger())
+    app.Use(mach.Recovery())
+
+    // Define a simple GET route
+    app.GET("/", func(c *mach.Context) {
+        c.Text(200, "Hello, World!")
+    })
+
+    // Define a route with a path parameter
+    app.GET("/hello/{name}", func(c *mach.Context) {
+        name := c.Param("name")
+        c.JSON(200, map[string]string{
+            "message": "Hello " + name,
+        })
+    })
+
+    // Start the server on port 8080
+    app.Run(":8080")
+}
+```
+
+### 3. Run the Application
+
+```bash
+go run main.go
+```
+
+You should see output indicating the server has started. Open your browser to `http://localhost:8080` to see "Hello, World!".
+
+Try visiting `http://localhost:8080/hello/Mach` to see the JSON response:
+
+```json
+{"message": "Hello Mach"}
+```
+
+## Running with TLS
+
+Mach makes it easy to serve over HTTPS using `RunTLS`, which is crucial for modern secure web applications.
+
+```go
+// Start an HTTPS server
+err := app.RunTLS(":8443", "cert.pem", "key.pem")
+if err != nil {
+    panic(err)
+}
+```
+
+## Using Defaults
+
+For a quick start with sensible defaults (Logger and Recovery middleware pre-configured), use `mach.Default()`:
+
+```go
+app := mach.Default() 
+// Equivalent to:
+// app := mach.New()
+// app.Use(mach.Logger())
+// app.Use(mach.Recovery())
+```

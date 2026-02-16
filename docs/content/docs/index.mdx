@@ -1,0 +1,69 @@
+---
+title: Introduction
+description: Welcome to Mach - A lightweight, minimalist web framework for Go
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+# Mach
+
+Mach is a minimalist web framework for Go, inspired by Python's Bottle and designed for developers who value simplicity and performance. It is built directly on top of the Go standard library's `net/http` package, leveraging the powerful new routing capabilities introduced in Go 1.22.
+
+<Callout type="info">
+    Built on Go 1.22's enhanced `net/http` router with zero external
+    dependencies. This ensures future-proof compatibility and stability.
+</Callout>
+
+## Why Mach?
+
+- **🚀 Go 1.22+ Routing**: Leverages stdlib pattern matching for path parameters and wildcards.
+- **⚡ Context Pooling**: Minimal allocations in hot paths using `sync.Pool` for optimal performance.
+- **🎯 Standard Patterns**: No magic, just clean and idiomatic Go code.
+- **📦 Zero Dependencies**: Core framework uses only the Go standard library.
+- **🔧 Middleware Ready**: Built-in Logger, Recovery, and CORS middleware.
+- **🛡️ Production Ready**: Graceful shutdown, timeouts, and TLS support out of the box.
+
+## Philosophy
+
+Mach embraces minimalism without sacrificing functionality. It provides the essential building blocks for web applications while staying out of your way. You get:
+
+- Clean, predictable APIs.
+- Familiar HTTP semantics.
+- Easy-to-understand middleware patterns.
+- Performance-focused design.
+
+## Features
+
+- **Routing**: Support for all standard HTTP methods (`GET`, `POST`, `PUT`, `DELETE`, etc.) with group support.
+- **Context**: A powerful `Context` object for handling requests and responses efficiently.
+- **Middleware**: Easy-to-use middleware system with built-in options.
+- **Data Binding**: Helpers for JSON and XML binding.
+- **Response Helpers**: Simple methods for sending JSON, XML, HTML, and text responses.
+- **Static Files**: Serve static files with ease.
+
+## Next Steps
+
+<div className="grid grid-cols-2 gap-4 mt-4">
+    <a
+        href="/docs/getting-started"
+        className="p-4 border rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors group"
+    >
+        <h3 className="font-semibold mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+            Getting Started →
+        </h3>
+        <p className="text-sm text-zinc-500">
+            Install Mach and build your first app.
+        </p>
+    </a>
+    <a
+        href="/docs/routing"
+        className="p-4 border rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors group"
+    >
+        <h3 className="font-semibold mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+            Routing →
+        </h3>
+        <p className="text-sm text-zinc-500">
+            Learn about URL patterns and groups.
+        </p>
+    </a>
+</div>
