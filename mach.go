@@ -1,3 +1,24 @@
+// Package mach provides a lightweight web framework for Go.
+//
+// Mach is built on Go 1.22's enhanced net/http router with zero dependencies.
+// It provides a simple, intuitive API for building web applications while
+// leveraging the standard library's performance and reliability.
+//
+// Example usage:
+//
+//	app := mach.Default()
+//
+//	app.GET("/", func(c *mach.Context) {
+//	    c.JSON(200, map[string]string{"message": "Hello, Mach!"})
+//	})
+//
+//	app.Run(":8080")
+//
+// Features:
+//   - Go 1.22+ native routing with method matching and path parameters
+//   - Standard http.Handler middleware pattern
+//   - Route groups for organization
+//   - Zero dependencies
 package mach
 
 import (
