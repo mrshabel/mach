@@ -73,12 +73,6 @@ func Recovery() MiddlewareFunc {
 	}
 }
 
-func CORS(allowOrigins []string) MiddlewareFunc {
-	return CORSWithConfig(CORSConfig{
-		AllowOrigins: allowOrigins,
-	})
-}
-
 type CORSConfig struct {
 	AllowOrigins      []string
 	AllowMethods      []string
@@ -89,10 +83,17 @@ type CORSConfig struct {
 	PreflightContinue bool
 }
 
+func CORS(allowOrigins []string) MiddlewareFunc {
+	return CORSWithConfig(CORSConfig{
+		AllowOrigins: allowOrigins,
+	})
+}
+
 func CORSWithConfig(config CORSConfig) MiddlewareFunc {
 	allowAll := false
 	origins := make(map[string]struct{}, len(config.AllowOrigins))
 
+	// validate origin
 	for _, origin := range config.AllowOrigins {
 		if origin == "*" {
 			allowAll = true
