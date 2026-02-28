@@ -54,7 +54,7 @@ func main() {
             Email string `json:"email"`
         }
 
-        if err := c.BindJSON(&user); err != nil {
+        if err := c.DecodeJSON(&user); err != nil {
             c.JSON(400, map[string]string{"error": err.Error()})
             return
         }

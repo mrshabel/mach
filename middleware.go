@@ -72,10 +72,16 @@ func Recovery() MiddlewareFunc {
 }
 
 func CORS(allowOrigins []string) MiddlewareFunc {
-	// build allowed origin list
+	// check if wildcard is present
+	allowAll := false
 	origins := make(map[string]struct{}, len(allowOrigins))
-	for _, org := range allowOrigins {
-		origins[org] = struct{}{}
+
+	for _, origin := range allowOrigins {
+		if origin == "*" {
+			allowAll = true
+			break
+		}
+		origins[origin] = struct{}{}
 	}
 
 	return func(next http.Handler) http.Handler {
@@ -83,9 +89,14 @@ func CORS(allowOrigins []string) MiddlewareFunc {
 			// validate that origin is whitelisted
 			origin := r.Header.Get("Origin")
 
-			if _, ok := origins[origin]; ok {
+			// allow all origins
+			if allowAll {
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			} else if _, ok := origins[origin]; ok {
+				// allow specific origin with no caching
 				w.Header().Set("Access-Control-Allow-Origin", origin)
-				// avoid caching origin
 				w.Header().Set("Vary", "Origin")
 				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
 				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")

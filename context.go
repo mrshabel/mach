@@ -10,6 +10,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 )
 
@@ -211,4 +212,25 @@ func (c *Context) SetCookie(cookie *http.Cookie) {
 // Redirect redirects to a URL
 func (c *Context) Redirect(status int, url string) {
 	http.Redirect(c.Response, c.Request, url, status)
+}
+
+// utilities
+
+// SaveFile saves an uploaded file to the specified destination path.
+func (c *Context) SaveFile(file *multipart.FileHeader, path string) error {
+	// copy file to destination
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	dest, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer dest.Close()
+
+	_, err = io.Copy(dest, src)
+	return err
 }

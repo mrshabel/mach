@@ -20,7 +20,7 @@ func (g *Group) Group(prefix string, middlewares ...MiddlewareFunc) *Group {
 	// copy all applicable middlewares
 	return &Group{
 		prefix:      g.prefix + prefix,
-		middlewares: append(g.middlewares, middlewares...),
+		middlewares: append(append([]MiddlewareFunc{}, g.middlewares...), middlewares...),
 		app:         g.app,
 	}
 }
@@ -30,7 +30,7 @@ func (g *Group) handle(method, path string, handler HandlerFunc) {
 	path = g.prefix + path
 
 	if len(g.middlewares) == 0 {
-		g.handle(method, path, handler)
+		g.app.handle(method, path, handler)
 		return
 	}
 
